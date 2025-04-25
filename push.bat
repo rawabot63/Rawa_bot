@@ -1,18 +1,11 @@
-git add .
-git commit -m "auto push"
-git push
 @echo off
-echo ---------------------------
-echo Pushing to GitHub & Deploy
-echo ---------------------------
-
-cd /d %~dp0
-
+echo Pushing to GitHub...
 git add .
-git commit -m "auto deploy"
-git push origin main
-
+git commit -m "Auto push"
+git push
+echo.
 echo ---------------------------
-echo Done! Check your Render.com
+echo Done! Opening Render...
+start https://dashboard.render.com/web/srv-d05cdf3uibrs73fiua4g/deploys
 echo ---------------------------
 pause
