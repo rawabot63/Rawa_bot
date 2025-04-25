@@ -101,7 +101,7 @@ async def main():
     print("ربات در حال اجراست...")
     await app.run_polling()
 
-# حل مشکل event loop در رندر:
+# حل مشکل event loop در رندر یا محیط‌های async دیگر
 if __name__ == "__main__":
     try:
         asyncio.run(main())
