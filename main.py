@@ -1,30 +1,68 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+import logging
+import os
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CallbackContext,
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+)
+from dotenv import load_dotenv
 
-# 🔐 توکن رباتت رو اینجا بذار
-TOKEN = "7784599888:AAGe3eb5XazFkmSwXpzFOoepRidtLi1n1u4"
+# بارگذاری متغیرها از فایل .env
+load_dotenv()
+TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
 
-# 📌 دستور start
+# تنظیمات لاگ‌گیری
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+
+# هندلر شروع
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("سلام! من راوا هستم 🤖\nمی‌خوای درباره‌ی داستان بدونی؟ فقط ازم بپرس!")
+    keyboard = [
+        [
+            InlineKeyboardButton("📖 خلاصه داستان", callback_data="summary"),
+            InlineKeyboardButton("🧑‍🤝‍🧑 شخصیت‌ها", callback_data="characters"),
+        ],
+        [
+            InlineKeyboardButton("🖼 گالری تصاویر", callback_data="gallery"),
+            InlineKeyboardButton("📝 ثبت نظرات", callback_data="feedback"),
+        ],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("به راوابات خوش اومدی! یکی از گزینه‌ها رو انتخاب کن:", reply_markup=reply_markup)
 
-# 💬 واکنش به هر پیام متنی معمولی
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_message = update.message.text
+# پاسخ به دکمه‌ها
+async def button_handler(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
 
-    # اینجا می‌تونی هوشمندش کنی یا به ربات شخصیت راوا وصل کنی
-    reply = f"تو گفتی: «{user_message}»\nولی فعلاً من دارم تمرین می‌کنم که بهتر پاسخ بدم :)"
-    await update.message.reply_text(reply)
+    data = query.data
 
-# ▶️ اجرای اصلی ربات
+    if data == "summary":
+        await query.edit_message_text("اینجا خلاصه‌ای از داستان نمایش داده میشه...")
+    elif data == "characters":
+        await query.edit_message_text("اینجا لیستی از شخصیت‌های داستان راوا رو می‌تونی ببینی...")
+    elif data == "gallery":
+        await query.edit_message_text("اینجا قراره گالری تصاویر کتاب رو ببینی...")
+    elif data == "feedback":
+        await query.edit_message_text("نظرتو درباره‌ی کتاب برامون بنویس!")
+
+# شروع ربات
 def main():
+    if not TOKEN:
+        print("❌ خطا: توکن یافت نشد. لطفاً در فایل .env مقدار BOT_TOKEN را تنظیم کنید.")
+        return
+
     app = ApplicationBuilder().token(TOKEN).build()
 
-    # اضافه کردن هندلرها
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(CallbackQueryHandler(button_handler))
 
-    # اجرای ربات
+    print("🤖 ربات در حال اجراست...")
     app.run_polling()
 
 if __name__ == "__main__":
