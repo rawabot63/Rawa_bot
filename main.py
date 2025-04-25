@@ -1,17 +1,16 @@
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
-
 import os
 
 # فعال‌سازی لاگ‌ها
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-# تابع استارت با منوی دو ستونه
+# تابع استارت با منوی دو ستونه (جای دکمه‌ها عوض شده)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     welcome_text = "🎉 به خانه‌ی راوا خوش آمدید 🌿\nاز بین گزینه‌های زیر، هر کدوم که دوست داشتی رو انتخاب کن:"
 
-    # ستون سمت چپ (قبلاً راست بود)
+    # ستون سمت چپ (خلاصه داستان و ...)
     left_column = [
         InlineKeyboardButton("📖 خلاصه داستان", callback_data='intro'),
         InlineKeyboardButton("✍️ نویسنده رمان", callback_data='author'),
@@ -21,7 +20,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         InlineKeyboardButton("📩 ارتباط با نویسنده", callback_data='contact')
     ]
 
-    # ستون سمت راست (قبلاً چپ بود)
+    # ستون سمت راست (شخصیت‌ها و گالری و ...)
     right_column = [
         InlineKeyboardButton("🧍‍♀️ شخصیت‌های رمان", callback_data='characters'),
         InlineKeyboardButton("🎨 تصویرگر", callback_data='illustrator'),
@@ -31,7 +30,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         InlineKeyboardButton("📝 ثبت نظرات", callback_data='feedback')
     ]
 
-    # دکمه‌های جفت‌شده
+    # جفت‌سازی دکمه‌ها
     paired_buttons = [[left, right] for left, right in zip(left_column, right_column)]
 
     # دکمه‌های بزرگ پایین
@@ -52,7 +51,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await query.answer()
     data = query.data
 
-    # پاسخ‌های ساده اولیه برای هر دکمه (بعداً تکمیل می‌کنیم)
+    # پاسخ‌های اولیه
     responses = {
         'intro': "📖 خلاصه داستان: راوا داستانی‌ست درباره ...",
         'author': "✍️ نویسنده: اطلاعات به‌زودی افزوده می‌شود.",
@@ -62,7 +61,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         'contact': "📩 پیامت رو بنویس، مستقیم به نویسنده می‌رسه ✉️",
         'characters': "🧍‍♀️ شخصیت‌های رمان: راوا، نادیا، حامد، ...",
         'illustrator': "🎨 تصویرگر: جوانه پیشکاری",
-        'why_read': "❓ چرا این رمان را بخوانم؟ چون متفاوت، عمیق و الهام‌بخشه.",
+        'why_read': "❓ چون متفاوت، عمیق و الهام‌بخشه.",
         'gallery': "🖼 گالری تصاویر: به‌زودی فعال خواهد شد.",
         'hate_character': "💢 شخصیت منفورت کی بود؟ لطفاً با دلیل برام بگو!",
         'feedback': "📝 نظرت رو بنویس، خود نویسنده می‌خونه 🌟",
@@ -75,11 +74,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 # راه‌اندازی ربات
 if __name__ == '__main__':
-    TOKEN = os.environ.get("TOKEN")  # یا مستقیماً مقدار توکن رو بذار اینجا
+    TOKEN = os.environ.get("TOKEN")  # یا مستقیماً مقدار توکن
 
     application = ApplicationBuilder().token(TOKEN).build()
-
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button))
-
     application.run_polling()
