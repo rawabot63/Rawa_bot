@@ -1,114 +1,85 @@
 import os
-import asyncio
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, CallbackQueryHandler
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CallbackQueryHandler, ContextTypes, CommandHandler
 from dotenv import load_dotenv
 
 load_dotenv()
-TOKEN = os.getenv("TOKEN")
 
-CHARACTER_DIR = "data/shakhsiyatha"
+# توکن و آی‌دی ادمین از env
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
 
-character_files = {
-    "راوا": "rawa.txt",
-    "جادُ": "jadu.txt",
-    "ثریا (سامیر)": "samir.txt",
-    "سامبا": "samba.txt",
-    "سونیت": "sonit.txt",
-    "سارینتاکار": "sarin.txt",
-    "کاتاک ها": "katak.txt",
-    "ماسوتا": "masota.txt",
-    "خانم جینک": "jink.txt",
-    "سیربا": "sirba.txt",
-    "زوبیر": "zubir.txt",
-    "سامبارو": "sambaro.txt",
-    "موماترا": "momatra.txt",
-    "ماساکار و هودیش": "masakar.txt",
-    "زاگورا": "zagora.txt",
-    "تالیس": "talis.txt",
-    "دیورا": "divora.txt",
-    "ماسین": "masin.txt",
-    "شومین": "shomin.txt",
-    "سامانتی": "samanti.txt",
-    "یوتا": "yuta.txt",
-    "یودم": "yodam.txt",
-    "میپار": "mipar.txt",
-    "آندو": "ando.txt",
-    "سیناس کور": "sinas.txt",
-    "روکو": "roko.txt",
-    "میوری": "miori.txt",
-    "تاجوتا": "tajota.txt",
-    "انگیس": "engis.txt",
-    "خاکیس": "khakis.txt",
-    "سالوادور": "salvador.txt",
-    "سارا و آرتور": "sara_arthur.txt",
-    "جیمز": "james.txt",
-    "پائول": "paul.txt",
-}
+# لیست شخصیت‌ها
+characters = [
+    "راوا", "جادُ", "ثریا (سامیر)", "سامبا", "سونیت", "سارینتاکار", "کاتاک ها",
+    "ماسوتا", "خانم جینک", "سیربا", "زوبیر", "سامبارو", "موماترا", "ماساکار و هودیش",
+    "زاگورا", "تالیس", "دیورا", "ماسین", "شومین", "سامانتی", "یوتا", "یودم",
+    "میپار", "آندو", "سیناس کور", "روکو", "میوری", "تاجوتا", "انگیس", "خاکیس",
+    "سالوادور", "سارا و آرتور", "جیمز", "پائول"
+]
 
-def build_character_keyboard():
+# ساخت کیبورد شخصیت‌ها
+def build_characters_keyboard():
+    keyboard = []
+    for name in characters:
+        keyboard.append([InlineKeyboardButton(name, callback_data=f"char_{name}")])
+    keyboard.append([InlineKeyboardButton("🔙 بازگشت به منوی اصلی", callback_data="main_menu")])
+    return InlineKeyboardMarkup(keyboard)
+
+# نمایش منوی اصلی
+def build_main_menu():
     keyboard = [
-        [InlineKeyboardButton(name, callback_data=f"character_{file}")]
-        for name, file in character_files.items()
+        [InlineKeyboardButton("👤 شخصیت‌های رمان", callback_data="shakhsiyatha")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
-def build_back_keyboard():
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 بازگشت به فهرست شخصیت‌ها", callback_data="back_to_list")],
-        [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
-    ])
-
+# شروع ربات
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "سلام! از فهرست زیر یکی از شخصیت‌های داستان را انتخاب کن:",
-        reply_markup=build_character_keyboard()
+        text="سلام! به ربات راوا خوش اومدی 🌟",
+        reply_markup=build_main_menu()
     )
 
-async def character_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# نمایش لیست شخصیت‌ها
+async def show_characters(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        text="🌟 شخصیت مورد نظرت رو انتخاب کن:",
+        reply_markup=build_characters_keyboard()
+    )
+
+# انتخاب یک شخصیت
+async def character_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    character_name = query.data.replace("char_", "")
+    await query.edit_message_text(
+        text=f"📖 اطلاعات مربوط به «{character_name}» به‌زودی اضافه می‌شود.",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔙 بازگشت به فهرست شخصیت‌ها", callback_data="shakhsiyatha")],
+            [InlineKeyboardButton("🏠 بازگشت به منوی اصلی", callback_data="main_menu")]
+        ])
+    )
 
-    data = query.data
-    if data.startswith("character_"):
-        filename = data.replace("character_", "")
-        path = os.path.join(CHARACTER_DIR, filename)
+# بازگشت به منو
+async def back_to_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.callback_query.answer()
+    await update.callback_query.edit_message_text(
+        text="🏠 برگشتی به منوی اصلی",
+        reply_markup=build_main_menu()
+    )
 
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                text = f.read()
-            await query.message.edit_text(
-                text=text,
-                reply_markup=build_back_keyboard()
-            )
-        else:
-            await query.message.edit_text("متن این شخصیت پیدا نشد.")
+# اجرای اصلی ربات
+def main():
+    application = Application.builder().token(BOT_TOKEN).build()
 
-    elif data == "back_to_list":
-        await query.message.edit_text(
-            "دوباره یکی از شخصیت‌ها رو انتخاب کن:",
-            reply_markup=build_character_keyboard()
-        )
-    elif data == "main_menu":
-        await query.message.edit_text("بازگشت به منوی اصلی 🌟 (در حال توسعه...)")
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CallbackQueryHandler(show_characters, pattern="^shakhsiyatha$"))
+    application.add_handler(CallbackQueryHandler(character_selected, pattern="^char_"))
+    application.add_handler(CallbackQueryHandler(back_to_menu, pattern="^main_menu$"))
 
-async def main():
-    app = ApplicationBuilder().token(TOKEN).build()
+    print("ربات اجرا شد...")
+    application.run_polling()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(character_handler))
-
-    print("ربات در حال اجراست...")
-    await app.run_polling()
-
-# حل مشکل event loop در رندر یا محیط‌های async دیگر
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except RuntimeError as e:
-        if "already running" in str(e):
-            loop = asyncio.get_event_loop()
-            loop.create_task(main())
-            loop.run_forever()
-        else:
-            raise
+    main()
