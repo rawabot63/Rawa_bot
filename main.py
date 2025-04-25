@@ -1,18 +1,18 @@
-# فایل اصلی بوت: main.py (یا هر اسمی که داری)
-
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+
 import os
 
-# فعال‌سازی لاگ‌ها برای دیباگ
+# فعال‌سازی لاگ‌ها
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-# هندلر استارت با منوی سفارشی‌شده
+# تابع استارت با منوی دو ستونه
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     welcome_text = "🎉 به خانه‌ی راوا خوش آمدید 🌿\nاز بین گزینه‌های زیر، هر کدوم که دوست داشتی رو انتخاب کن:"
 
-    right_column = [
+    # ستون سمت چپ (قبلاً راست بود)
+    left_column = [
         InlineKeyboardButton("📖 خلاصه داستان", callback_data='intro'),
         InlineKeyboardButton("✍️ نویسنده رمان", callback_data='author'),
         InlineKeyboardButton("💬 جمله‌ی امروز راوا", callback_data='daily_quote'),
@@ -21,7 +21,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         InlineKeyboardButton("📩 ارتباط با نویسنده", callback_data='contact')
     ]
 
-    left_column = [
+    # ستون سمت راست (قبلاً چپ بود)
+    right_column = [
         InlineKeyboardButton("🧍‍♀️ شخصیت‌های رمان", callback_data='characters'),
         InlineKeyboardButton("🎨 تصویرگر", callback_data='illustrator'),
         InlineKeyboardButton("❓ چرا این رمان را بخوانم؟", callback_data='why_read'),
@@ -30,8 +31,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         InlineKeyboardButton("📝 ثبت نظرات", callback_data='feedback')
     ]
 
-    # جفت‌کردن دکمه‌های دو ستونه
-    paired_buttons = [[right, left] for right, left in zip(right_column, left_column)]
+    # دکمه‌های جفت‌شده
+    paired_buttons = [[left, right] for left, right in zip(left_column, right_column)]
 
     # دکمه‌های بزرگ پایین
     large_buttons = [
@@ -45,16 +46,37 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     await update.message.reply_text(welcome_text, reply_markup=reply_markup)
 
-
-# هندلر کلی دکمه‌ها (فعلاً ساده برای تست)
+# هندلر دکمه‌ها
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text(text=f"شما این گزینه رو انتخاب کردید: {query.data}")
+    data = query.data
 
-# اجرای ربات
+    # پاسخ‌های ساده اولیه برای هر دکمه (بعداً تکمیل می‌کنیم)
+    responses = {
+        'intro': "📖 خلاصه داستان: راوا داستانی‌ست درباره ...",
+        'author': "✍️ نویسنده: اطلاعات به‌زودی افزوده می‌شود.",
+        'daily_quote': "💬 جمله‌ی امروز راوا: «زندگی یعنی بلند شدن پس از هر سقوط.»",
+        'audio_preview': "🔊 پیش‌نمایش صوتی: به‌زودی در دسترس قرار می‌گیرد.",
+        'fav_character': "❤️ شخصیت محبوبت کی بود؟ لطفاً برام بنویس 🌟",
+        'contact': "📩 پیامت رو بنویس، مستقیم به نویسنده می‌رسه ✉️",
+        'characters': "🧍‍♀️ شخصیت‌های رمان: راوا، نادیا، حامد، ...",
+        'illustrator': "🎨 تصویرگر: جوانه پیشکاری",
+        'why_read': "❓ چرا این رمان را بخوانم؟ چون متفاوت، عمیق و الهام‌بخشه.",
+        'gallery': "🖼 گالری تصاویر: به‌زودی فعال خواهد شد.",
+        'hate_character': "💢 شخصیت منفورت کی بود؟ لطفاً با دلیل برام بگو!",
+        'feedback': "📝 نظرت رو بنویس، خود نویسنده می‌خونه 🌟",
+        'write_for_rawa': "🖋 جمله‌ات برای راوا رو بنویس، با افتخار منتشرش می‌کنیم.",
+        'collab': "🤝 دوست داری همکاری کنی؟ بنویس بهم چی تو ذهنته!",
+        'download': "📥 لینک دریافت اثر به‌زودی قرار می‌گیره."
+    }
+
+    await query.edit_message_text(responses.get(data, "❗ گزینه‌ی نامشخصی انتخاب شده."))
+
+# راه‌اندازی ربات
 if __name__ == '__main__':
-    TOKEN = os.environ.get("TOKEN")  # در رندر یا گیت‌هاب ست شده
+    TOKEN = os.environ.get("TOKEN")  # یا مستقیماً مقدار توکن رو بذار اینجا
+
     application = ApplicationBuilder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
