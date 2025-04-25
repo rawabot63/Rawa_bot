@@ -1,118 +1,114 @@
 import os
-from telegram import (
-    Update, InlineKeyboardButton, InlineKeyboardMarkup
-)
-from telegram.ext import (
-    ApplicationBuilder, CommandHandler, CallbackQueryHandler,
-    ContextTypes
-)
+import asyncio
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, CallbackQueryHandler
+from dotenv import load_dotenv
 
-# مسیرهای فایل‌ها
-BASE_DIR = "data"
-SUMMARY_FILE = os.path.join(BASE_DIR, "kholase.txt")
-CHARACTERS_DIR = os.path.join(BASE_DIR, "shakhsiyatha")
+load_dotenv()
+TOKEN = os.getenv("TOKEN")
 
-# شخصیت‌ها (برای دکمه‌سازی)
-characters = [
-    "راوا", "جادُ", "ثریا (سامیر)", "سامبا", "سونیت", "سارینتاکار", "کاتاک ها",
-    "ماسوتا", "خانم جینک", "سیربا", "زوبیر", "سامبارو", "موماترا",
-    "ماساکار و هودیش", "زاگورا", "تالیس", "دیورا", "ماسین", "شومین",
-    "سامانتی", "یوتا", "یودم", "میپار", "آندو", "سیناس کور", "روکو",
-    "میوری", "تاجوتا", "انگیس", "خاکیس", "سالوادور", "سارا و آرتور", "جیمز", "پائول"
-]
+CHARACTER_DIR = "data/shakhsiyatha"
 
-# تابع برای خواندن فایل متنی
-def read_file(path):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read()
-    except Exception as e:
-        return "خطا در بارگذاری محتوا."
+character_files = {
+    "راوا": "rawa.txt",
+    "جادُ": "jadu.txt",
+    "ثریا (سامیر)": "samir.txt",
+    "سامبا": "samba.txt",
+    "سونیت": "sonit.txt",
+    "سارینتاکار": "sarin.txt",
+    "کاتاک ها": "katak.txt",
+    "ماسوتا": "masota.txt",
+    "خانم جینک": "jink.txt",
+    "سیربا": "sirba.txt",
+    "زوبیر": "zubir.txt",
+    "سامبارو": "sambaro.txt",
+    "موماترا": "momatra.txt",
+    "ماساکار و هودیش": "masakar.txt",
+    "زاگورا": "zagora.txt",
+    "تالیس": "talis.txt",
+    "دیورا": "divora.txt",
+    "ماسین": "masin.txt",
+    "شومین": "shomin.txt",
+    "سامانتی": "samanti.txt",
+    "یوتا": "yuta.txt",
+    "یودم": "yodam.txt",
+    "میپار": "mipar.txt",
+    "آندو": "ando.txt",
+    "سیناس کور": "sinas.txt",
+    "روکو": "roko.txt",
+    "میوری": "miori.txt",
+    "تاجوتا": "tajota.txt",
+    "انگیس": "engis.txt",
+    "خاکیس": "khakis.txt",
+    "سالوادور": "salvador.txt",
+    "سارا و آرتور": "sara_arthur.txt",
+    "جیمز": "james.txt",
+    "پائول": "paul.txt",
+}
 
-# دکمه برگشت‌ها
-def back_buttons():
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 بازگشت به شخصیت‌ها", callback_data="back_to_characters")],
-        [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
-    ])
-
-# منوی اصلی
-def main_menu():
+def build_character_keyboard():
     keyboard = [
-        [
-            InlineKeyboardButton("👤 شخصیت‌های رمان", callback_data="characters"),
-            InlineKeyboardButton("📖 خلاصه داستان", callback_data="summary")
-        ],
-        [
-            InlineKeyboardButton("🎨 تصویرگر", callback_data="designer"),
-            InlineKeyboardButton("✍️ نویسنده رمان", callback_data="author")
-        ],
-        [
-            InlineKeyboardButton("❓ چرا این رمان را بخوانم؟", callback_data="why_read"),
-            InlineKeyboardButton("🗣 جمله‌ی امروز راوا", callback_data="quote")
-        ],
-        [
-            InlineKeyboardButton("🖼 گالری تصاویر", callback_data="gallery"),
-            InlineKeyboardButton("🔊 پیش‌نمایش صوتی", callback_data="audio")
-        ],
-        [
-            InlineKeyboardButton("💔 شخصیت منفورت کی بود؟", callback_data="hated_character"),
-            InlineKeyboardButton("💖 شخصیت محبوبت کی بود؟", callback_data="loved_character")
-        ],
-        [
-            InlineKeyboardButton("📝 ثبت نظرات", callback_data="comments"),
-            InlineKeyboardButton("✉️ ارتباط با نویسنده", callback_data="contact")
-        ],
-        [InlineKeyboardButton("🧠 برای راوا یک جمله بنویس", callback_data="write_to_rawa")],
-        [InlineKeyboardButton("🤝 همکاری با راوا", callback_data="cooperation")],
-        [InlineKeyboardButton("📥 دریافت اثر", callback_data="download")]
+        [InlineKeyboardButton(name, callback_data=f"character_{file}")]
+        for name, file in character_files.items()
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# /start command
+def build_back_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 بازگشت به فهرست شخصیت‌ها", callback_data="back_to_list")],
+        [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
+    ])
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "به خانه‌ی راوا خوش آمدید",
-        reply_markup=main_menu()
+        "سلام! از فهرست زیر یکی از شخصیت‌های داستان را انتخاب کن:",
+        reply_markup=build_character_keyboard()
     )
 
-# هندلر کلی دکمه‌ها
-async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def character_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+
     data = query.data
+    if data.startswith("character_"):
+        filename = data.replace("character_", "")
+        path = os.path.join(CHARACTER_DIR, filename)
 
-    if data == "summary":
-        text = read_file(SUMMARY_FILE)
-        await query.edit_message_text(text=text, reply_markup=back_buttons())
-    elif data == "characters":
-        buttons = [[InlineKeyboardButton(name, callback_data=f"char_{i}")] for i, name in enumerate(characters)]
-        await query.edit_message_text("شخصیتی را انتخاب کن:", reply_markup=InlineKeyboardMarkup(buttons))
-    elif data.startswith("char_"):
-        index = int(data.split("_")[1])
-        name = characters[index]
-        filename = f"{name.split()[0].lower()}.txt"
-        filepath = os.path.join(CHARACTERS_DIR, filename)
-        text = read_file(filepath)
-        await query.edit_message_text(text=text, reply_markup=back_buttons())
-    elif data == "back_to_characters":
-        buttons = [[InlineKeyboardButton(name, callback_data=f"char_{i}")] for i, name in enumerate(characters)]
-        await query.edit_message_text("شخصیتی را انتخاب کن:", reply_markup=InlineKeyboardMarkup(buttons))
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                text = f.read()
+            await query.message.edit_text(
+                text=text,
+                reply_markup=build_back_keyboard()
+            )
+        else:
+            await query.message.edit_text("متن این شخصیت پیدا نشد.")
+
+    elif data == "back_to_list":
+        await query.message.edit_text(
+            "دوباره یکی از شخصیت‌ها رو انتخاب کن:",
+            reply_markup=build_character_keyboard()
+        )
     elif data == "main_menu":
-        await query.edit_message_text("به خانه‌ی راوا خوش آمدید", reply_markup=main_menu())
-    else:
-        await query.answer("این بخش هنوز فعال نشده 🌱")
+        await query.message.edit_text("بازگشت به منوی اصلی 🌟 (در حال توسعه...)")
 
-# راه‌اندازی اپلیکیشن
-if __name__ == '__main__':
-    import asyncio
+async def main():
+    app = ApplicationBuilder().token(TOKEN).build()
 
-    TOKEN = os.getenv("TOKEN")  # اسم متغیر در Render
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(character_handler))
 
-    async def main():
-        app = ApplicationBuilder().token(TOKEN).build()
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(CallbackQueryHandler(handle_buttons))
-        await app.run_polling()
+    print("ربات در حال اجراست...")
+    await app.run_polling()
 
-    asyncio.run(main())
+# حل مشکل event loop در رندر:
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except RuntimeError as e:
+        if "already running" in str(e):
+            loop = asyncio.get_event_loop()
+            loop.create_task(main())
+            loop.run_forever()
+        else:
+            raise
