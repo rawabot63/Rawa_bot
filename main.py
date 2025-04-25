@@ -1,69 +1,47 @@
 import logging
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+
 import os
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import (
-    ApplicationBuilder,
-    CallbackContext,
-    CallbackQueryHandler,
-    CommandHandler,
-    ContextTypes,
-)
-from dotenv import load_dotenv
 
-# بارگذاری متغیرها از فایل .env
-load_dotenv()
-TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
+# فعال‌سازی لاگ‌ها برای بررسی خطاها
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-# تنظیمات لاگ‌گیری
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-
-# هندلر شروع
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# دستورات شروع
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [
-        [
-            InlineKeyboardButton("📖 خلاصه داستان", callback_data="summary"),
-            InlineKeyboardButton("🧑‍🤝‍🧑 شخصیت‌ها", callback_data="characters"),
-        ],
-        [
-            InlineKeyboardButton("🖼 گالری تصاویر", callback_data="gallery"),
-            InlineKeyboardButton("📝 ثبت نظرات", callback_data="feedback"),
-        ],
+        [InlineKeyboardButton("📖 معرفی داستان", callback_data='intro')],
+        [InlineKeyboardButton("👤 شخصیت‌ها", callback_data='characters')],
+        [InlineKeyboardButton("🖼 گالری تصاویر", callback_data='gallery')],
+        [InlineKeyboardButton("📝 ثبت نظرات", callback_data='feedback')],
+        [InlineKeyboardButton("✉️ ارسال پیام", callback_data='contact')],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("به راوابات خوش اومدی! یکی از گزینه‌ها رو انتخاب کن:", reply_markup=reply_markup)
+    await update.message.reply_text("سلام! به ربات راوا خوش اومدی 🌟\nیکی از گزینه‌های زیر رو انتخاب کن:", reply_markup=reply_markup)
 
-# پاسخ به دکمه‌ها
-async def button_handler(update: Update, context: CallbackContext):
+# مدیریت دکمه‌ها
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
 
     data = query.data
+    if data == 'intro':
+        await query.edit_message_text("📖 خلاصه داستان: راوا داستانی‌ست درباره ...")
+    elif data == 'characters':
+        await query.edit_message_text("👤 شخصیت‌ها: راوا، نادیا، حامد ...")
+    elif data == 'gallery':
+        await query.edit_message_text("🖼 گالری به‌زودی فعال خواهد شد!")
+    elif data == 'feedback':
+        await query.edit_message_text("📝 نظر خودت رو بنویس و برای من بفرست 🌟")
+    elif data == 'contact':
+        await query.edit_message_text("✉️ پیام یا پیشنهادت رو بنویس تا به نویسنده برسه.")
 
-    if data == "summary":
-        await query.edit_message_text("اینجا خلاصه‌ای از داستان نمایش داده میشه...")
-    elif data == "characters":
-        await query.edit_message_text("اینجا لیستی از شخصیت‌های داستان راوا رو می‌تونی ببینی...")
-    elif data == "gallery":
-        await query.edit_message_text("اینجا قراره گالری تصاویر کتاب رو ببینی...")
-    elif data == "feedback":
-        await query.edit_message_text("نظرتو درباره‌ی کتاب برامون بنویس!")
+# راه‌اندازی ربات
+if __name__ == '__main__':
+    TOKEN = os.environ.get("TOKEN")
+    application = ApplicationBuilder().token(TOKEN).build()
 
-# شروع ربات
-def main():
-    if not TOKEN:
-        print("❌ خطا: توکن یافت نشد. لطفاً در فایل .env مقدار BOT_TOKEN را تنظیم کنید.")
-        return
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CallbackQueryHandler(button))
 
-    app = ApplicationBuilder().token(TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_handler))
-
-    print("🤖 ربات در حال اجراست...")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+    application.run_polling()
