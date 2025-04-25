@@ -10,28 +10,28 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [
         [
-            InlineKeyboardButton("📖 خلاصه داستان", callback_data='intro'),
-            InlineKeyboardButton("👤 شخصیت‌های رمان", callback_data='characters')
+            InlineKeyboardButton("👤 شخصیت‌های رمان", callback_data='characters'),
+            InlineKeyboardButton("📖 خلاصه داستان", callback_data='intro')
         ],
         [
-            InlineKeyboardButton("✍️ نویسنده رمان", callback_data='author'),
-            InlineKeyboardButton("🎨 تصویرگر", callback_data='illustrator')
+            InlineKeyboardButton("🎨 تصویرگر", callback_data='illustrator'),
+            InlineKeyboardButton("✍️ نویسنده رمان", callback_data='author')
         ],
         [
-            InlineKeyboardButton("🗣 جمله‌ی امروز راوا", callback_data='daily_quote'),
-            InlineKeyboardButton("❓ چرا این رمان را بخوانم؟", callback_data='why_read')
+            InlineKeyboardButton("❓ چرا این رمان را بخوانم؟", callback_data='why_read'),
+            InlineKeyboardButton("🗣 جمله‌ی امروز راوا", callback_data='daily_quote')
         ],
         [
-            InlineKeyboardButton("🔊 پیش‌نمایش صوتی", callback_data='audio_preview'),
-            InlineKeyboardButton("🖼 گالری تصاویر", callback_data='gallery')
+            InlineKeyboardButton("🖼 گالری تصاویر", callback_data='gallery'),
+            InlineKeyboardButton("🔊 پیش‌نمایش صوتی", callback_data='audio_preview')
         ],
         [
-            InlineKeyboardButton("💖 شخصیت محبوبت کی بود؟", callback_data='fav_character'),
-            InlineKeyboardButton("💔 شخصیت منفورت کی بود؟", callback_data='least_fav_character')
+            InlineKeyboardButton("💔 شخصیت منفورت کی بود؟", callback_data='least_fav_character'),
+            InlineKeyboardButton("💖 شخصیت محبوبت کی بود؟", callback_data='fav_character')
         ],
         [
-            InlineKeyboardButton("✉️ ارتباط با نویسنده", callback_data='contact'),
-            InlineKeyboardButton("📝 ثبت نظرات", callback_data='feedback')
+            InlineKeyboardButton("📝 ثبت نظرات", callback_data='feedback'),
+            InlineKeyboardButton("✉️ ارتباط با نویسنده", callback_data='contact')
         ],
         [InlineKeyboardButton("🖋 برای راوا یک جمله بنویس", callback_data='write_to_rawa')],
         [InlineKeyboardButton("🤝 همکاری با راوا", callback_data='collab')],
@@ -50,7 +50,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     responses = {
         'intro': "📖 خلاصه داستان: راوا داستانی‌ست درباره...",
         'characters': "👤 شخصیت‌های رمان: راوا، نادیا، حامد...",
-        'author': "✍️ نویسنده رمان: [نام نویسنده] است...",
+        'author': "✍️ نویسنده رمان: [نام نویسنده]",
         'illustrator': "🎨 تصویرگر: جوانه پیشکاری",
         'daily_quote': "🗣 جمله‌ی امروز راوا: «زندگی، فصلِ آزمونِ صبر است.»",
         'why_read': "❓ این رمان رو بخون چون...",
